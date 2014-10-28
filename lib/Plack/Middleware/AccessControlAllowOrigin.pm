@@ -7,23 +7,47 @@ use parent 'Plack::Middleware';
 use Plack::Util;
 use Plack::Util::Accessor 'origin';
 use Plack::Util::Accessor 'allow_credentials';
+use Plack::Util::Accessor 'origin_whitelist';
 
 sub call {
     my $self = shift;
     my $env = shift;
+    my $request_origin = $env->{'HTTP_ORIGIN'};
 
     my $res  = $self->app->(@_);
     $self->response_cb($res, sub {
         my $res = shift;
-        my $origin = $self->origin;
-        $origin = $env->{'psgi.url_scheme'}.'://'.$env->{'HTTP_HOST'} if ($self->allow_credentials);
-        Plack::Util::header_set($res->[1],
-            'Access-Control-Allow-Origin' => $origin
-        );
+        my $origin;
+
         if ($self->allow_credentials) {
+            if ($request_origin =~ $self->origin_whitelist()) {
+                $origin = $request_origin;
+            } else {
+                # Request origin is not whitelisted.
+                # $origin stays undef, no headers set
+            }
+        } else {
+            if ($self->origin_whitelist()) {
+                if ($request_origin =~ $self->origin_whitelist()) {
+                    $origin = $request_origin;
+                } else {
+                    # Request origin is not whitelisted.
+                    # $origin stays undef, no headers set
+                }
+            } else {
+                $origin = $self->origin;
+            }
+        }
+
+        if ($origin) {
             Plack::Util::header_set($res->[1],
-                'Access-Control-Allow-Credentials' => 'true'
+                'Access-Control-Allow-Origin' => $origin
             );
+            if ($self->allow_credentials) {
+                Plack::Util::header_set($res->[1],
+                    'Access-Control-Allow-Credentials' => 'true'
+                );
+            }
         }
     });
 }
