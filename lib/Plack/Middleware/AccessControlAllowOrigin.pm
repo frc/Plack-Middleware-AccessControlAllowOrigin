@@ -19,24 +19,19 @@ sub call {
         my $res = shift;
         my $origin;
 
-        if ($self->allow_credentials) {
+        if ($self->origin_whitelist()) {
             if ($request_origin =~ $self->origin_whitelist()) {
+                # Request origin is whitelisted, accept.
                 $origin = $request_origin;
             } else {
-                # Request origin is not whitelisted.
+                # Request origin is not whitelisted, don't accept.
                 # $origin stays undef, no headers set
             }
+        } elsif ($self->allow_credentials and $self->origin eq '*') {
+            die('You must use origin_whitelist if you allow_credentials, wildcard origin "*" is not supported in CORS.');
         } else {
-            if ($self->origin_whitelist()) {
-                if ($request_origin =~ $self->origin_whitelist()) {
-                    $origin = $request_origin;
-                } else {
-                    # Request origin is not whitelisted.
-                    # $origin stays undef, no headers set
-                }
-            } else {
-                $origin = $self->origin;
-            }
+            # Allow_credentials is false or origin wildcard is not used, use basic origin setting
+            $origin = $self->origin;
         }
 
         if ($origin) {
