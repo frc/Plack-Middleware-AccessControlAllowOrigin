@@ -85,6 +85,8 @@ punytan E<lt>punytan@gmail.comE<gt>, Oskari Okko Ojala E<lt>okko@perl.org<gt>
 
 =head1 SEE ALSO
 
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS
+
 =head1 LICENSE
 
 This library is free software; you can redistribute it and/or modify
