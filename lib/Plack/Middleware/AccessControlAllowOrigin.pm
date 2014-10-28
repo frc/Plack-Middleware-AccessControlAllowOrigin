@@ -1,11 +1,12 @@
 package Plack::Middleware::AccessControlAllowOrigin;
 use strict;
 use warnings;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 use parent 'Plack::Middleware';
 
 use Plack::Util;
 use Plack::Util::Accessor 'origin';
+use Plack::Util::Accessor 'allow_credentials';
 
 sub call {
     my $self = shift;
@@ -16,6 +17,11 @@ sub call {
         Plack::Util::header_set($res->[1],
             'Access-Control-Allow-Origin' => $self->origin
         );
+        if ($self->allow_credentials) {
+            Plack::Util::header_set($res->[1],
+                'Access-Control-Allow-Credentials' => 'true'
+            );
+        }
     });
 }
 
@@ -44,6 +50,10 @@ Plack::Middleware::AccessControlAllowOrigin adds C<Access-Control-Allow-Origin> 
 =item origin
 
 Specify the value of C<Access-Control-Allow-Origin> header.
+
+=item allow_credentials
+
+Specify if sending credentials is allowed. Defaults to false.
 
 =back
 
