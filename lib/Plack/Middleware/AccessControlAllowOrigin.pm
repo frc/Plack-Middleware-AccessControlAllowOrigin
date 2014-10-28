@@ -79,9 +79,9 @@ Specify if sending credentials is allowed. Defaults to false.
 
 =back
 
-=head1 AUTHOR
+=head1 AUTHORS
 
-punytan E<lt>punytan@gmail.comE<gt>
+punytan E<lt>punytan@gmail.comE<gt>, Oskari Okko Ojala E<lt>okko@perl.org<gt>
 
 =head1 SEE ALSO
 
