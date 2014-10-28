@@ -10,12 +10,15 @@ use Plack::Util::Accessor 'allow_credentials';
 
 sub call {
     my $self = shift;
+    my $env = shift;
 
     my $res  = $self->app->(@_);
     $self->response_cb($res, sub {
         my $res = shift;
+        my $origin = $self->origin;
+        $origin = $env->{'psgi.url_scheme'}.'://'.$env->{'HTTP_HOST'} if ($self->allow_credentials);
         Plack::Util::header_set($res->[1],
-            'Access-Control-Allow-Origin' => $self->origin
+            'Access-Control-Allow-Origin' => $origin
         );
         if ($self->allow_credentials) {
             Plack::Util::header_set($res->[1],
