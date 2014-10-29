@@ -5,7 +5,7 @@ our $VERSION = '0.02';
 use parent 'Plack::Middleware';
 
 use Plack::Util;
-use Plack::Util::Accessor 'origin';
+use Plack::Util::Accessor 'allow_origin';
 use Plack::Util::Accessor 'allow_credentials';
 use Plack::Util::Accessor 'origin_whitelist';
 use Plack::Util::Accessor 'allow_methods';
@@ -20,26 +20,26 @@ sub call {
     my $res  = $self->app->(@_);
     $self->response_cb($res, sub {
         my $res = shift;
-        my $origin;
+        my $allow_origin;
 
         if ($self->origin_whitelist()) {
             if ($request_origin =~ $self->origin_whitelist()) {
                 # Request origin is whitelisted, accept.
-                $origin = $request_origin;
+                $allow_origin = $request_origin;
             } else {
                 # Request origin is not whitelisted, don't accept.
-                # $origin stays undef, no headers set
+                # $allow_origin stays undef, no headers set
             }
-        } elsif ($self->allow_credentials and $self->origin eq '*') {
-            die('You must use origin_whitelist if you allow_credentials, wildcard origin "*" is not supported in CORS.');
+        } elsif ($self->allow_credentials and $self->allow_origin eq '*') {
+            die('You must use origin_whitelist if you allow_credentials, wildcard allow_origin "*" is not supported in CORS.');
         } else {
             # Allow_credentials is false or origin wildcard is not used, use basic origin setting
-            $origin = $self->origin;
+            $allow_origin = $self->allow_origin;
         }
 
-        if ($origin) {
+        if ($allow_origin) {
             Plack::Util::header_set($res->[1],
-                'Access-Control-Allow-Origin' => $origin
+                'Access-Control-Allow-Origin' => $allow_origin
             );
             if ($self->allow_credentials) {
                 Plack::Util::header_set($res->[1],
@@ -83,7 +83,7 @@ Plack::Middleware::AccessControlAllowOrigin adds C<Access-Control-Allow-Origin> 
 
 =over 4
 
-=item origin
+=item allow_origin
 
 Specify the value of C<Access-Control-Allow-Origin> header.
 
