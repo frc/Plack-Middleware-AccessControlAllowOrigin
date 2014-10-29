@@ -9,13 +9,34 @@ use Plack::Util::Accessor 'allow_origin';
 use Plack::Util::Accessor 'allow_credentials';
 use Plack::Util::Accessor 'allow_origin_whitelist';
 use Plack::Util::Accessor 'allow_methods';
-use Plack::Util::Accessor 'origin_fallback';
+use Plack::Util::Accessor 'allow_origin_fallback';
 
 sub call {
     my $self = shift;
     my $env = shift;
     my $request_origin = $env->{'HTTP_ORIGIN'};
 
+    # for preflighted GET requests, some WebKit versions don't
+    # include Origin with the actual request.  Fixed in current versions
+    # of WebKit, Chrome, and Safari.
+    # Work around it using the Referer header.
+    # https://bugs.webkit.org/show_bug.cgi?id=50773
+    # http://code.google.com/p/chromium/issues/detail?id=57836
+    if (!$request_origin and
+        ($env->{REQUEST_METHOD} eq 'GET'
+         && $env->{HTTP_USER_AGENT}
+         && $env->{HTTP_USER_AGENT} =~ m{\bAppleWebKit/(\d+\.\d+)}
+         && $1 < 534.19
+         && $env->{HTTP_REFERER}
+         && $env->{HTTP_REFERER} =~ m{\A ( \w+://[^/]+ )}msx
+        )
+       ) {
+            $request_origin = $1;
+    }
+    if (!$request_origin and $self->allow_origin_fallback) {
+        # Firewalls may prevent getting Referer information, so as a last fallback use a hard-configured default if set
+        $request_origin = $self->allow_origin_fallback;
+    }
 
     my $res  = $self->app->(@_);
     $self->response_cb($res, sub {
