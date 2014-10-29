@@ -56,7 +56,7 @@ sub call {
                     'Access-Control-Allow-Methods' => $self->allow_methods
                 );
             }
-        );
+        }
 
     });
 }
