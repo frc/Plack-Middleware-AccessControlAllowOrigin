@@ -8,11 +8,14 @@ use Plack::Util;
 use Plack::Util::Accessor 'origin';
 use Plack::Util::Accessor 'allow_credentials';
 use Plack::Util::Accessor 'origin_whitelist';
+use Plack::Util::Accessor 'allow_methods';
+use Plack::Util::Accessor 'origin_fallback';
 
 sub call {
     my $self = shift;
     my $env = shift;
     my $request_origin = $env->{'HTTP_ORIGIN'};
+
 
     my $res  = $self->app->(@_);
     $self->response_cb($res, sub {
@@ -44,6 +47,17 @@ sub call {
                 );
             }
         }
+
+        if ($self->allow_methods) {
+            if ($self->allow_credentials and $self->allow_methods eq '*') {
+                die('Wildcard "*" for methods is not supported in CORS when allow_credentials is true');
+            } else {
+                Plack::Util::header_set($res->[1],
+                    'Access-Control-Allow-Methods' => $self->allow_methods
+                );
+            }
+        );
+
     });
 }
 
