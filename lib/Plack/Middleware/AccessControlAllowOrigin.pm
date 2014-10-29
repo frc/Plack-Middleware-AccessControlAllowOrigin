@@ -7,7 +7,7 @@ use parent 'Plack::Middleware';
 use Plack::Util;
 use Plack::Util::Accessor 'allow_origin';
 use Plack::Util::Accessor 'allow_credentials';
-use Plack::Util::Accessor 'origin_whitelist';
+use Plack::Util::Accessor 'allow_origin_whitelist';
 use Plack::Util::Accessor 'allow_methods';
 use Plack::Util::Accessor 'origin_fallback';
 
@@ -22,8 +22,8 @@ sub call {
         my $res = shift;
         my $allow_origin;
 
-        if ($self->origin_whitelist()) {
-            if ($request_origin =~ $self->origin_whitelist()) {
+        if ($self->allow_origin_whitelist()) {
+            if ($request_origin =~ $self->allow_origin_whitelist()) {
                 # Request origin is whitelisted, accept.
                 $allow_origin = $request_origin;
             } else {
@@ -31,7 +31,7 @@ sub call {
                 # $allow_origin stays undef, no headers set
             }
         } elsif ($self->allow_credentials and $self->allow_origin eq '*') {
-            die('You must use origin_whitelist if you allow_credentials, wildcard allow_origin "*" is not supported in CORS.');
+            die('You must use allow_origin_whitelist if you allow_credentials, wildcard allow_origin "*" is not supported in CORS.');
         } else {
             # Allow_credentials is false or origin wildcard is not used, use basic origin setting
             $allow_origin = $self->allow_origin;
